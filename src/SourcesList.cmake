@@ -4,6 +4,8 @@ set(Sources_List
     MainView.h
     MainWindow.cpp
     MainWindow.h
+    TiffRenderer.cpp
+    TiffRenderer.h
 )
 
 set(Moc_Headers

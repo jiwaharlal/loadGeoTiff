@@ -5,6 +5,8 @@
 #include <QPixmap>
 #include <QImage>
 
+class TiffRenderer;
+
 class MainWindow: public QGraphicsWidget
 {
 public:
@@ -15,9 +17,15 @@ public:
 protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+
 private:
-//    QPixmap* m_image;
-    QImage* m_image;
+    TiffRenderer* m_renderer;
+    QPoint m_mapOffset;
+    QPoint m_prevMousePos;
+    bool m_isMousePressed;
 };
 
 #endif // __MAIN_WINDOW_H__

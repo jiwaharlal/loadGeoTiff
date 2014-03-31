@@ -18,11 +18,12 @@ int main(int argc, char *argv[])
     QGraphicsScene scene;
     MainWindow* w = new MainWindow();
     w->loadTiff( argv[1] );
-    scene.setSceneRect( 0, 0, 1429, 605 );
+//    scene.setSceneRect( 0, 0, 1429, 605 );
     scene.addItem(w);
     scene.setActiveWindow(w);
     MainView view(&scene);
-    view.resize(1429, 605);
+    view.setMainWindow( w );
+//    view.resize(1429, 605);
     // QObject::connect( &view, SIGNAL()
     view.show();
     
