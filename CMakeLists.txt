@@ -10,6 +10,7 @@ include(src/SourcesList.cmake)
 project(${PROJECT})
 
 find_package(Qt4 REQUIRED)
+find_package(TIFF REQUIRED)
 include (${QT_USE_FILE})
 
 qt4_wrap_cpp (MOC_SOURCES ${MOC_HEADERS})
@@ -22,4 +23,4 @@ add_executable(${PROJECT}
     ${RESOURCES}
 )
 
-target_link_libraries(${PROJECT} ${QT_LIBRARIES})
+target_link_libraries(${PROJECT} ${QT_LIBRARIES} ${TIFF_LIBRARIES})
