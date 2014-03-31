@@ -3,6 +3,7 @@
 
 #include <QGraphicsWidget>
 #include <QPixmap>
+#include <QImage>
 
 class MainWindow: public QGraphicsWidget
 {
@@ -15,7 +16,8 @@ protected:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
 private:
-    QPixmap* m_image;
+//    QPixmap* m_image;
+    QImage* m_image;
 };
 
 #endif // __MAIN_WINDOW_H__
