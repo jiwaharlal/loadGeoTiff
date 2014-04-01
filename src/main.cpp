@@ -8,6 +8,8 @@
 
 int main(int argc, char *argv[])
 {
+    std::cout << "in main" << std::endl;
+
     if ( argc != 2 )
     {
         std::cout << "Usage: " << argv[0] << " <tiff filename>" << std::endl;
@@ -29,3 +31,4 @@ int main(int argc, char *argv[])
     
     return a.exec();
 }
+

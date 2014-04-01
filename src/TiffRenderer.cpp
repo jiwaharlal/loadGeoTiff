@@ -4,28 +4,68 @@
 #include <QDebug>
 
 #include <tiffio.h>
+#include <xtiffio.h>
+#include <geotiff.h>
+#include "geo_normalize.h"
+#include "geo_simpletags.h"
+#include "geovalues.h"
 
 #include <cassert>
+#include <iostream>
+#include <stdio.h>
+#include <math.h>
 
 TiffRenderer::TiffRenderer(const QString &fileName)
     : m_fileName( fileName )
+    , m_isValid( false )
 {
-    TIFF* tif = TIFFOpen( fileName.toStdString().c_str(), "r" );
+//    TIFF* tif = TIFFOpen( fileName.toStdString().c_str(), "r" );
+    TIFF* tif = XTIFFOpen( fileName.toStdString().c_str(), "r" );
 
     assert( tif && "Error opening TIFF" );
 
-    uint32 imageWidth, imageLength;
-    uint32 tileWidth, tileLength;
+    GTIF* gtif = GTIFNew( tif );
 
-    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &imageWidth);
-    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &imageLength);
-    TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tileWidth);
-    TIFFGetField(tif, TIFFTAG_TILELENGTH, &tileLength);
+    if ( gtif )
+    {
+        int     nKeyCount = 0;
+        int     anVersion[3];
+        GTIFDirectoryInfo( gtif, anVersion, &nKeyCount );
 
-    m_tileSize = QSize( tileWidth, tileLength );
-    m_imageSize = QSize( imageWidth, imageLength );
+        GTIFDefn defn;
 
-    TIFFClose( tif );
+        if ( GTIFGetDefn( gtif, &defn ) )
+        {
+            GTIFPrintDefn( &defn, stdout );
+        }
+        else
+        {
+            qDebug() << "Failed to get GeoTiff definition";
+        }
+    }
+    else
+    {
+        qDebug() << "GTIFF creation failed";
+    }
+
+    m_isValid = TIFFIsTiled( tif );
+
+    if ( m_isValid )
+    {
+        uint32 imageWidth, imageLength;
+        uint32 tileWidth, tileLength;
+
+        TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &imageWidth);
+        TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &imageLength);
+        TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tileWidth);
+        TIFFGetField(tif, TIFFTAG_TILELENGTH, &tileLength);
+
+        m_tileSize = QSize( tileWidth, tileLength );
+        m_imageSize = QSize( imageWidth, imageLength );
+
+    }
+
+    XTIFFClose( tif );
 }
 
 void TiffRenderer::render(const QPoint &targetLeftTop, const QPoint &srcLeftTop, const QSize &renderSize, QPainter *painter)
@@ -79,6 +119,67 @@ void TiffRenderer::render(const QPoint &targetLeftTop, const QPoint &srcLeftTop,
 QSize TiffRenderer::imageSize()
 {
     return m_imageSize;
+}
+
+bool TiffRenderer::isValid()
+{
+    return m_isValid;
+}
+
+namespace
+{
+
+    static const double RadToDeg = 57.2957795130823208768;     /* 180.0 / M_PI */
+    static const double EarthRadius = 6378388l;                /* Earth radius in meters */
+
+    double latitudeMetricToDegree( double latitudeMetric )
+    {
+        return RadToDeg * ( 2 * atan( exp( latitudeMetric / EarthRadius ) ) - M_PI_2 );
+    }
+
+    double longitudeMetricToDegree( double longitudeMetric )
+    {
+        return longitudeMetric * RadToDeg / EarthRadius;
+    }
+
+}
+
+TiffRenderer::Coords TiffRenderer::getPointCoords(const QPoint &imagePoint)
+{
+    TIFF* tif = XTIFFOpen( m_fileName.toStdString().c_str(), "r" );
+    Coords result(0.0, 0.0);
+    if ( tif ) {
+        GTIF* gtif = GTIFNew( tif );
+
+        if ( gtif ) {
+            GTIFDefn defn;
+
+            if ( GTIFGetDefn( gtif, &defn ) ) {
+                double x = imagePoint.x();
+                double y = imagePoint.y();
+
+                if ( GTIFImageToPCS( gtif, &x, &y ) ) {
+                    double lon = longitudeMetricToDegree( x );
+                    double lat = latitudeMetricToDegree( y );
+                    result = Coords( lat, lon );
+                } else {
+                    qDebug() << "Failed to confert image coords to geo coords";
+                }
+            } else {
+                qDebug() << "Failed to read GTIFDefn";
+            }
+
+            GTIFFree( gtif );
+        } else {
+            qDebug() << "Failed to create geotiff handler";
+        }
+
+        XTIFFClose( tif );
+    } else {
+        qDebug() << "Failed to open tiff file";
+    }
+
+    return result;
 }
 
 namespace {

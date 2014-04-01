@@ -11,6 +11,7 @@ project(${PROJECT})
 
 find_package(Qt4 REQUIRED)
 find_package(TIFF REQUIRED)
+find_package(GEOTIFF REQUIRED)
 include (${QT_USE_FILE})
 
 qt4_wrap_cpp (MOC_SOURCES ${MOC_HEADERS})
@@ -23,4 +24,8 @@ add_executable(${PROJECT}
     ${RESOURCES}
 )
 
-target_link_libraries(${PROJECT} ${QT_LIBRARIES} ${TIFF_LIBRARIES})
+foreach(lib ${TIFF_LIBRARIES} ${GEOTIFF_LIBRARIES})
+    message(STATUS ${lib})
+endforeach()
+
+target_link_libraries(${PROJECT} ${QT_LIBRARIES} ${TIFF_LIBRARIES} ${GEOTIFF_LIBRARIES})

@@ -38,10 +38,20 @@ class TiffRenderer
         int y;
     };
 public:
+    struct Coords
+    {
+        Coords( double newLat, double newLon ) : lat(newLat), lon(newLon) {}
+        double lat;
+        double lon;
+    };
+
+public:
     TiffRenderer( const QString& fileName );
 
     void render( const QPoint& targetLeftTop, const QPoint& srcLeftTop, const QSize& renderSize, QPainter* painter );
     QSize imageSize();
+    bool isValid();
+    Coords getPointCoords( const QPoint& imagePoint );
 
 private:
     typedef koki::rl_ptr< QImage > ImageSp;
@@ -56,6 +66,7 @@ private:
     QSize m_tileSize;
     QSize m_imageSize;
     QString m_fileName;
+    bool m_isValid;
 };
 
 #endif // __TIFF_RENDERER_H__

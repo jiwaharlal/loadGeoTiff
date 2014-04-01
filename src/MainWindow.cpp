@@ -74,11 +74,30 @@ void MainWindow::loadTiff(const QString &tiffFileName)
 
 void MainWindow::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    QRect rect = boundingRect().toRect();
-    rect.adjust( -rect.left(), -rect.top(), -rect.left(), -rect.top() );
-    QRect imageRect = QRect( QPoint(0, 0), m_renderer->imageSize() ).intersect( rect );
+    if ( m_renderer->isValid() )
+    {
+        QRect rect = boundingRect().toRect();
+        rect.adjust( -rect.left(), -rect.top(), -rect.left(), -rect.top() );
+        QRect imageRect = QRect( QPoint(0, 0), m_renderer->imageSize() ).intersect( rect );
 
-    m_renderer->render( QPoint(0, 0), m_mapOffset, imageRect.size(), painter );
+        m_renderer->render( QPoint(0, 0), m_mapOffset, imageRect.size(), painter );
+
+        TiffRenderer::Coords coords = m_renderer->getPointCoords( m_mapOffset );
+        qDebug() << "Map offset " << m_mapOffset;
+        QString text = QString( "Lat: %1, Lon: %2").arg( coords.lat ).arg( coords.lon );
+        QFontMetrics metrics( painter->font() );
+        int rectWidth = metrics.width( text ) + 20;
+        int rectHeight = metrics.height() + 14;
+        QRect coordRect( 10, 10, rectWidth, rectHeight );
+        painter->fillRect( coordRect, Qt::white );
+        painter->setPen( Qt::red );
+        painter->drawText( coordRect.adjusted( 10, 7, 0, 0 ), text );
+    }
+    else
+    {
+        painter->setPen( Qt::red );
+        painter->drawText( 20, 20, "Tiff was not loaded" );
+    }
 }
 
 void MainWindow::mousePressEvent(QGraphicsSceneMouseEvent *event)
