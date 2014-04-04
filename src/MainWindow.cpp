@@ -72,6 +72,22 @@ void MainWindow::loadTiff(const QString &tiffFileName)
     m_mapOffset = QPoint( 0, 0 );
 }
 
+namespace
+{
+QString degreesAsDegMinSec( double degrees )
+{
+    int deg = static_cast<int>( degrees );
+    degrees -= static_cast<double>( deg );
+    double minutes = degrees * 60;
+    int min = static_cast<int>( minutes );
+    minutes -= static_cast<double>( min );
+    int secs = static_cast<int>( minutes * 60 );
+
+    return QString( "%1 %2' %3\"" ).arg(deg).arg(min).arg(secs);
+}
+}
+
+
 void MainWindow::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     if ( m_renderer->isValid() )
@@ -91,6 +107,11 @@ void MainWindow::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
         QRect coordRect( 10, 10, rectWidth, rectHeight );
         painter->fillRect( coordRect, Qt::white );
         painter->setPen( Qt::red );
+        painter->drawText( coordRect.adjusted( 10, 7, 0, 0 ), text );
+        text = "Lat: " + degreesAsDegMinSec( coords.lat ) + " Lon: " + degreesAsDegMinSec( coords.lon );
+        coordRect.setWidth( metrics.width(text) + 20 );
+        coordRect.adjust( 0, coordRect.height(), 0, coordRect.height() );
+        painter->fillRect( coordRect, Qt::white );
         painter->drawText( coordRect.adjusted( 10, 7, 0, 0 ), text );
     }
     else
